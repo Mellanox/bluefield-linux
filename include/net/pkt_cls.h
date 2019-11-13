@@ -601,6 +601,7 @@ struct tc_block_offload {
 };
 
 struct tc_cls_common_offload {
+	u32 handle;
 	u32 chain_index;
 	__be16 protocol;
 	u32 prio;

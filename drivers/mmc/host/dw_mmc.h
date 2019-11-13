@@ -202,14 +202,18 @@ struct dw_mci {
 
 	u32			bus_hz;
 	u32			current_speed;
+	u32			num_slots;
 	u32			fifoth_val;
 	u16			verid;
+	u8			card_type;
 	struct device		*dev;
 	struct dw_mci_board	*pdata;
 	const struct dw_mci_drv_data	*drv_data;
 	void			*priv;
 	struct clk		*biu_clk;
 	struct clk		*ciu_clk;
+#define DW_MMC_SLOT_NUM	2
+	struct dw_mci_slot	*slots[DW_MMC_SLOT_NUM];
 	struct dw_mci_slot	*slot;
 
 	/* FIFO push and pull */
@@ -251,6 +255,8 @@ struct dma_pdata;
 
 /* Board platform data */
 struct dw_mci_board {
+	u32 num_slots;
+
 	unsigned int bus_hz; /* Clock speed at the cclk_in pad */
 
 	u32 caps;	/* Capabilities */
@@ -402,6 +408,8 @@ struct dw_mci_board {
 #define SDMMC_CMD_RESP_LONG		BIT(7)
 #define SDMMC_CMD_RESP_EXP		BIT(6)
 #define SDMMC_CMD_INDX(n)		((n) & 0x1F)
+#define SDMMC_CMD_CARD_NUM(n)		((n & 0x1F) << 16)
+#define SDMMC_GET_CARD_NUM(x)		(((x)>>16) & 0x1F)
 /* Status register defines */
 #define SDMMC_GET_FCNT(x)		(((x)>>17) & 0x1FFF)
 #define SDMMC_STATUS_DMA_REQ		BIT(31)
@@ -415,6 +423,7 @@ struct dw_mci_board {
 #define DMA_INTERFACE_DWDMA		(0x1)
 #define DMA_INTERFACE_GDMA		(0x2)
 #define DMA_INTERFACE_NODMA		(0x3)
+#define SDMMC_GET_CARD_TYPE(x)		((x) & 0x1)
 #define SDMMC_GET_TRANS_MODE(x)		(((x)>>16) & 0x3)
 #define SDMMC_GET_SLOT_NUM(x)		((((x)>>1) & 0x1F) + 1)
 #define SDMMC_GET_HDATA_WIDTH(x)	(((x)>>7) & 0x7)
@@ -449,6 +458,10 @@ struct dw_mci_board {
 /* All ctrl reset bits */
 #define SDMMC_CTRL_ALL_RESET_FLAGS \
 	(SDMMC_CTRL_RESET | SDMMC_CTRL_FIFO_RESET | SDMMC_CTRL_DMA_RESET)
+
+/* Card types */
+#define DW_CARD_TYPE_MMC_ONLY		0
+#define DW_CARD_TYPE_SD_MMC		1
 
 /* FIFO register access macros. These should not change the data endian-ness
  * as they are written to memory to be dealt with by the upper layers

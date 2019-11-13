@@ -381,10 +381,17 @@ static int mmc_decode_ext_csd(struct mmc_card *card, u8 *ext_csd)
 		}
 	}
 
-	np = mmc_of_find_child_device(card->host, 0);
-	if (np && of_device_is_compatible(np, "mmc-card"))
-		broken_hpi = of_property_read_bool(np, "broken-hpi");
-	of_node_put(np);
+	/* Check broken-hpi configuration. */
+	if (card->host->parent) {
+		broken_hpi = device_property_read_bool(card->host->parent,
+						       "broken-hpi");
+	}
+	if (!broken_hpi) {
+		np = mmc_of_find_child_device(card->host, 0);
+		if (np && of_device_is_compatible(np, "mmc-card"))
+			broken_hpi = of_property_read_bool(np, "broken-hpi");
+		of_node_put(np);
+	}
 
 	/*
 	 * The EXT_CSD format is meant to be forward compatible. As long
